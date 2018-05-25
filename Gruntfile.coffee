@@ -17,6 +17,7 @@ module.exports = (grunt) ->
 
   SRC_CORE = [
     'src/Array.js'
+    'src/filter/CommentFilter.js'
     'src/core/js/CommentUtils.js'
     'src/core/js/Comment.js'
     'src/core/js/css-renderer/CssComment.js'
@@ -26,7 +27,6 @@ module.exports = (grunt) ->
   ]
 
   SRC_MODULES =
-    'filter': ['src/filter/CommentFilter.js']
     'provider': ['src/CommentProvider.js', 'src/Promises.js']
     'format-bilibili': ['src/parsers/BilibiliFormat.js']
     'format-acfun': ['src/parsers/AcfunFormat.js']
@@ -222,7 +222,7 @@ module.exports = (grunt) ->
   # Register our tasks
   grunt.registerTask 'test', ['coffee', 'jasmine:coverage']
   grunt.registerTask 'build', ['compile:ts-core', 'concat:dist_all', 'autoprefixer', 'cssmin', 'uglify:all']
-  grunt.registerTask 'build:core', ['compile:ts-core', 'concat:dist_core', 'autoprefixer', 'cssmin', 'uglify:core']
+  grunt.registerTask 'build:core', ['compile:ts-core', 'concat:dist_core', 'autoprefixer', 'cssmin', 'uglify:all']
   grunt.registerTask 'build:scripting', ['clean:scripting','concat:scripting_host', 'compile:ts-kagerou', 'copy:scripting_sandbox']
   grunt.registerTask 'ci', ['build', 'coffee', 'jasmine:ci']
 

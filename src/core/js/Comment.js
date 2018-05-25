@@ -105,6 +105,9 @@ var CoreComment = (function () {
         if (init.hasOwnProperty('transform')) {
             this._transform = new CommentUtils.Matrix3D(init['transform']);
         }
+        if (init.hasOwnProperty('render')) {
+            this._render = init['render'];
+        }
         if (init.hasOwnProperty('position')) {
             if (init['position'] === 'relative') {
                 this.absolute = false;
@@ -116,16 +119,21 @@ var CoreComment = (function () {
     }
     CoreComment.prototype.init = function (recycle) {
         if (recycle === void 0) { recycle = null; }
-        if (recycle !== null) {
-            this.dom = recycle.dom;
+        if (this._render) {
+            this.dom = this._render();
         }
         else {
-            this.dom = document.createElement('div');
+            if (recycle !== null) {
+                this.dom = recycle.dom;
+            }
+            else {
+                this.dom = document.createElement('div');
+            }
+            this.dom.className = this.parent.options.global.className;
+            this.dom.appendChild(document.createTextNode(this.text));
+            this.dom.textContent = this.text;
+            this.dom.innerText = this.text;
         }
-        this.dom.className = this.parent.options.global.className;
-        this.dom.appendChild(document.createTextNode(this.text));
-        this.dom.textContent = this.text;
-        this.dom.innerText = this.text;
         this.size = this._size;
         if (this._color != 0xffffff) {
             this.color = this._color;

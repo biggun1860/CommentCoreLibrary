@@ -55,6 +55,7 @@ class CoreComment implements IComment {
   private _shadow:boolean = true;
   private _font:string = '';
   private _transform:CommentUtils.Matrix3D = null;
+  private _render:Function;
 
   public parent:ICommentManager;
   public dom:HTMLDivElement;
@@ -138,6 +139,9 @@ class CoreComment implements IComment {
     if (init.hasOwnProperty('transform')) {
       this._transform = new CommentUtils.Matrix3D(init['transform']);
     }
+    if (init.hasOwnProperty('render')) {
+      this._render = init['render'];
+    }
     if (init.hasOwnProperty('position')) {
       if (init['position'] === 'relative') {
         this.absolute = false;
@@ -153,15 +157,19 @@ class CoreComment implements IComment {
    * This method takes the place of 'initCmt' in the old CCL
    */
   public init(recycle:IComment = null):void {
-    if (recycle !== null) {
-      this.dom = <HTMLDivElement> recycle.dom;
-    } else {
-      this.dom = document.createElement('div');
+    if(this._render) {
+      this.dom = this._render();
+    }else{
+      if (recycle !== null) {
+        this.dom = <HTMLDivElement> recycle.dom;
+      } else {
+        this.dom = document.createElement('div');
+      }
+      this.dom.className = this.parent.options.global.className;
+      this.dom.appendChild(document.createTextNode(this.text));
+      this.dom.textContent = this.text;
+      this.dom.innerText = this.text;
     }
-    this.dom.className = this.parent.options.global.className;
-    this.dom.appendChild(document.createTextNode(this.text));
-    this.dom.textContent = this.text;
-    this.dom.innerText = this.text;
     this.size = this._size;
     if (this._color != 0xffffff) {
       this.color = this._color;

@@ -647,6 +647,38 @@ var Display;
         };
         return DropShadowFilter;
     }(Filter));
+    var ConvolutionFilter = (function (_super) {
+        __extends(ConvolutionFilter, _super);
+        function ConvolutionFilter(matrixX, matrixY, matrix, divisor, bias, preserveAlpha, clamp, color, alpha) {
+            if (matrixX === void 0) { matrixX = 0; }
+            if (matrixY === void 0) { matrixY = 0; }
+            if (matrix === void 0) { matrix = null; }
+            if (divisor === void 0) { divisor = 1.0; }
+            if (bias === void 0) { bias = 0.0; }
+            if (preserveAlpha === void 0) { preserveAlpha = true; }
+            if (clamp === void 0) { clamp = true; }
+            if (color === void 0) { color = 0; }
+            if (alpha === void 0) { alpha = 0.0; }
+            _super.call(this);
+        }
+        ;
+        ConvolutionFilter.prototype.serialize = function () {
+            var s = _super.prototype.serialize.call(this);
+            s['type'] = 'convolution';
+            s['matrix'] = {
+                'x': this._matrixX,
+                'y': this._matrixY,
+                'data': this._matrix
+            };
+            s['divisor'] = this._divisor;
+            s['preserveAlpha'] = this._preserveAlpha;
+            s['clamp'] = this._clamp;
+            s['color'] = this._color;
+            s['alpha'] = this._alpha;
+            return s;
+        };
+        return ConvolutionFilter;
+    }(Filter));
     function createDropShadowFilter(distance, angle, color, alpha, blurX, blurY, strength, quality) {
         if (distance === void 0) { distance = 4.0; }
         if (angle === void 0) { angle = 45; }
@@ -682,8 +714,17 @@ var Display;
         throw new Error('Display.createBevelFilter not implemented');
     }
     Display.createBevelFilter = createBevelFilter;
-    function createConvolutionFilter() {
-        throw new Error('Display.createConvolutionFilter not implemented');
+    function createConvolutionFilter(matrixX, matrixY, matrix, divisor, bias, preserveAlpha, clamp, color, alpha) {
+        if (matrixX === void 0) { matrixX = 0; }
+        if (matrixY === void 0) { matrixY = 0; }
+        if (matrix === void 0) { matrix = null; }
+        if (divisor === void 0) { divisor = 1.0; }
+        if (bias === void 0) { bias = 0.0; }
+        if (preserveAlpha === void 0) { preserveAlpha = true; }
+        if (clamp === void 0) { clamp = true; }
+        if (color === void 0) { color = 0; }
+        if (alpha === void 0) { alpha = 0.0; }
+        return new ConvolutionFilter(matrixX, matrixY, matrix, divisor, bias, preserveAlpha, clamp, color, alpha);
     }
     Display.createConvolutionFilter = createConvolutionFilter;
     function createDisplacementMapFilter() {
@@ -1776,6 +1817,37 @@ var Display;
 })(Display || (Display = {}));
 var Display;
 (function (Display) {
+    var DirtyArea = (function () {
+        function DirtyArea() {
+            this._xBegin = null;
+            this._yBegin = null;
+            this._xEnd = null;
+            this._yEnd = null;
+        }
+        DirtyArea.prototype.expand = function (x, y) {
+            this._xBegin = this._xBegin === null ? x : Math.min(this._xBegin, x);
+            this._xEnd = this._xEnd === null ? x : Math.max(this._xEnd, x);
+            this._yBegin = this._yBegin === null ? y : Math.min(this._yBegin, y);
+            this._yEnd = this._xEnd === null ? y : Math.max(this._yEnd, y);
+        };
+        DirtyArea.prototype.asRect = function () {
+            if (this.isEmpty()) {
+                return new Display.Rectangle(0, 0, 0, 0);
+            }
+            return new Display.Rectangle(this._xBegin, this._yBegin, this._xEnd - this._xBegin, this._yEnd - this._yBegin);
+        };
+        DirtyArea.prototype.isEmpty = function () {
+            return this._xBegin === null || this._yBegin === null ||
+                this._xEnd === null || this._yEnd === null;
+        };
+        DirtyArea.prototype.reset = function () {
+            this._xBegin = null;
+            this._xEnd = null;
+            this._yBegin = null;
+            this._yEnd = null;
+        };
+        return DirtyArea;
+    }());
     var Bitmap = (function (_super) {
         __extends(Bitmap, _super);
         function Bitmap() {
@@ -1840,9 +1912,12 @@ var Display;
     }(Array));
     Display.ByteArray = ByteArray;
     var BitmapData = (function () {
-        function BitmapData(width, height, transparent, fillColor) {
+        function BitmapData(width, height, transparent, fillColor, id) {
             if (transparent === void 0) { transparent = true; }
             if (fillColor === void 0) { fillColor = 0xffffffff; }
+            if (id === void 0) { id = Runtime.generateId(); }
+            this._locked = false;
+            this._id = id;
             this._rect = new Display.Rectangle(0, 0, width, height);
             this._transparent = transparent;
             this._fillColor = fillColor;
@@ -1853,6 +1928,44 @@ var Display;
             for (var i = 0; i < this._rect.width * this._rect.height; i++) {
                 this._byteArray.push(this._fillColor);
             }
+        };
+        BitmapData.prototype._updateBox = function (changeRect) {
+            if (changeRect === void 0) { changeRect = null; }
+            if (this._dirtyArea.isEmpty()) {
+                return;
+            }
+            if (this._locked) {
+                return;
+            }
+            var change = changeRect === null ? this._dirtyArea.asRect() :
+                changeRect;
+            if (!this._rect.containsRect(change)) {
+                __trace('BitmapData._updateBox box ' + change.toString() +
+                    ' out of bonunds ' + this._rect.toString(), 'err');
+                throw new Error('Rectangle provided was not within image bounds.');
+            }
+            var region = [];
+            for (var i = 0; i < change.height; i++) {
+                for (var j = 0; j < change.width; j++) {
+                    region.push(this._byteArray[(change.y + i) * this._rect.width +
+                        change.x + j]);
+                }
+            }
+            __pchannel('Runtime:CallMethod', {
+                'id': this.getId(),
+                'name': 'updateBox',
+                'value': {
+                    'box': change.serialize(),
+                    'values': values
+                },
+            });
+        };
+        BitmapData.prototype._call = function (method, arguments) {
+            __pchannel('Runtime:CallMethod', {
+                'id': this.getId(),
+                'name': name,
+                'value': arguments,
+            });
         };
         Object.defineProperty(BitmapData.prototype, "height", {
             get: function () {
@@ -1924,6 +2037,7 @@ var Display;
                 color = color & 0xffffffff;
             }
             this._byteArray[y * this._rect.width + x] = color;
+            this._dirtyArea.expand(x, y);
         };
         BitmapData.prototype.setPixels = function (rect, input) {
             if (rect.width === 0 || rect.height === 0) {
@@ -1937,8 +2051,25 @@ var Display;
                 for (var j = 0; j < rect.height; j++) {
                     this._byteArray[(rect.y + j) * this.width + (rect.x + i)] =
                         input[j * rect.width + i];
+                    this._dirtyArea.expand(i, j);
                 }
             }
+        };
+        BitmapData.prototype.lock = function () {
+            this._locked = true;
+        };
+        BitmapData.prototype.unlock = function (changeRect) {
+            if (changeRect === void 0) { changeRect = null; }
+            this._locked = false;
+            if (changeRect == null) {
+                this._updateBox();
+            }
+            else {
+                this._updateBox(changeRect);
+            }
+        };
+        BitmapData.prototype.getId = function () {
+            return this._id;
         };
         BitmapData.prototype.serialize = function () {
             return {

@@ -15,6 +15,8 @@
 # Ignore tscache
 .tscache
 
+/dist
+
 # Ignore .baseDir related things
 #  These are only used as transient items due to compiling TypeScript. They may
 #  become useful when the project can fully move to TypeScript.

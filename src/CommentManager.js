@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2014 Jim Chen
  */
-var CommentManager = (function() {
+window.CommentManager = (function() {
     var _defaultComparator = function (a,b) {
         if (a.stime > b.stime) {
             return 2;
@@ -135,9 +135,9 @@ var CommentManager = (function() {
         this.dispatchEvent("clear");
     };
 
-    CommentManager.prototype.setBounds = function () {
-        this.width = this.stage.offsetWidth;
-        this.height= this.stage.offsetHeight;
+    CommentManager.prototype.setBounds = function (width, height) {
+        this.width = width || this.stage.offsetWidth;
+        this.height= height || this.stage.offsetHeight;
         this.dispatchEvent("resize");
         for (var comAlloc in this.csa) {
             this.csa[comAlloc].setBounds(this.width,this.height);
