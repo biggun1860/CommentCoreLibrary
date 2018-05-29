@@ -604,7 +604,7 @@ var CoreComment = (function () {
     Object.defineProperty(CoreComment.prototype, "width", {
         get: function () {
             if (this._width === null || this._width === undefined) {
-                this._width = this.dom.offsetWidth;
+                this._width = this.dom.getBoundingClientRect().width;
             }
             return this._width;
         },
@@ -674,7 +674,7 @@ var CoreComment = (function () {
         set: function (b) {
             this._border = b;
             if (this._border) {
-                this.dom.style.border = '1px solid #00ffff';
+                this.dom.style.border = '2px solid #ffffff';
             }
             else {
                 this.dom.style.border = 'none';

@@ -255,7 +255,7 @@ class CoreComment implements IComment {
 
   get width():number {
     if (this._width === null || this._width === undefined) {
-      this._width = this.dom.offsetWidth;
+      this._width = this.dom.getBoundingClientRect().width;
     }
     return this._width;
   }
@@ -352,7 +352,7 @@ class CoreComment implements IComment {
   set border(b:boolean) {
     this._border = b;
     if (this._border) {
-      this.dom.style.border = '1px solid #00ffff';
+      this.dom.style.border = '2px solid #ffffff';
     } else {
       this.dom.style.border = 'none';
     }
