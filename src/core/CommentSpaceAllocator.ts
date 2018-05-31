@@ -44,7 +44,8 @@ class CommentSpaceAllocator implements ISpaceAllocator {
    * @returns {boolean} checked collides with exisiting
    */
   public willCollide(existing:IComment, check:IComment):boolean {
-    return existing.stime + existing.ttl >= check.stime + check.ttl / 2;
+    // return existing.x > this._width - existing.width - 30;
+    return existing.stime + existing.ttl >= check.stime + check.ttl / 1.2;
   }
 
   /**
