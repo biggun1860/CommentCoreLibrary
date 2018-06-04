@@ -358,6 +358,7 @@ var CoreComment = (function () {
         this.cindex = -1;
         this.motion = [];
         this.movable = true;
+        this.forceShow = false;
         this._alphaMotion = null;
         this.absolute = true;
         this.align = 0;
@@ -451,6 +452,9 @@ var CoreComment = (function () {
         }
         if (init.hasOwnProperty('render')) {
             this._render = init['render'];
+        }
+        if (init.hasOwnProperty('forceShow')) {
+            this.forceShow = init['forceShow'];
         }
         if (init.hasOwnProperty('position')) {
             if (init['position'] === 'relative') {
@@ -1027,7 +1031,8 @@ var CommentSpaceAllocator = (function () {
         this._height = height;
     }
     CommentSpaceAllocator.prototype.willCollide = function (existing, check) {
-        return existing.stime + existing.ttl >= check.stime + check.ttl / 1.2;
+        var selfDur = check.dur * check.width / (this._width + check.width);
+        return existing.stime + existing.ttl + selfDur >= check.stime + check.ttl;
     };
     CommentSpaceAllocator.prototype.pathCheck = function (y, comment, pool) {
         var bottom = y + comment.height;
@@ -1378,6 +1383,10 @@ window.CommentManager = (function() {
         cmt.y = cmt.y;
         this.dispatchEvent("enterComment", cmt);
         this.runline.push(cmt);
+
+        if(cmt.cindex > 0 && !cmt.forceShow) {
+            cmt.finish();
+        }
     };
 
     CommentManager.prototype.finish = function (cmt) {

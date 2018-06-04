@@ -44,8 +44,9 @@ class CommentSpaceAllocator implements ISpaceAllocator {
    * @returns {boolean} checked collides with exisiting
    */
   public willCollide(existing:IComment, check:IComment):boolean {
-    // return existing.x > this._width - existing.width - 30;
-    return existing.stime + existing.ttl >= check.stime + check.ttl / 1.2;
+    var selfDur = check.dur * check.width / (this._width + check.width);//走完本体长度所需时间
+    return existing.stime + existing.ttl + selfDur >= check.stime + check.ttl;
+    // return existing.stime + existing.ttl >= check.stime + check.ttl / 2;
   }
 
   /**
@@ -64,7 +65,6 @@ class CommentSpaceAllocator implements ISpaceAllocator {
         // This comment is not in the path bounds
         continue;
       } else if (pool[i].right < comment.x || pool[i].x > right) {
-
         if (this.willCollide(pool[i], comment)) {
           return false;
         } else {

@@ -235,6 +235,10 @@ window.CommentManager = (function() {
         cmt.y = cmt.y;
         this.dispatchEvent("enterComment", cmt);
         this.runline.push(cmt);
+
+        if(cmt.cindex > 0 && !cmt.forceShow) {
+            cmt.finish();
+        }
     };
 
     CommentManager.prototype.finish = function (cmt) {

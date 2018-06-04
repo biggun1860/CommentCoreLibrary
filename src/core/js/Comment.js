@@ -14,6 +14,7 @@ var CoreComment = (function () {
         this.cindex = -1;
         this.motion = [];
         this.movable = true;
+        this.forceShow = false;
         this._alphaMotion = null;
         this.absolute = true;
         this.align = 0;
@@ -107,6 +108,9 @@ var CoreComment = (function () {
         }
         if (init.hasOwnProperty('render')) {
             this._render = init['render'];
+        }
+        if (init.hasOwnProperty('forceShow')) {
+            this.forceShow = init['forceShow'];
         }
         if (init.hasOwnProperty('position')) {
             if (init['position'] === 'relative') {

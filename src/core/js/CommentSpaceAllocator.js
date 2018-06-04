@@ -15,7 +15,8 @@ var CommentSpaceAllocator = (function () {
         this._height = height;
     }
     CommentSpaceAllocator.prototype.willCollide = function (existing, check) {
-        return existing.stime + existing.ttl >= check.stime + check.ttl / 1.2;
+        var selfDur = check.dur * check.width / (this._width + check.width);
+        return existing.stime + existing.ttl + selfDur >= check.stime + check.ttl;
     };
     CommentSpaceAllocator.prototype.pathCheck = function (y, comment, pool) {
         var bottom = y + comment.height;

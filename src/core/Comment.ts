@@ -21,6 +21,7 @@ class CoreComment implements IComment {
 
   public motion:Array<Object> = [];
   public movable:boolean = true;
+  public forceShow:boolean = false; // 强制显示，即使有重叠出现
 
   private _curMotion:number;
   private _motionStart:Array<number>;
@@ -141,6 +142,9 @@ class CoreComment implements IComment {
     }
     if (init.hasOwnProperty('render')) {
       this._render = init['render'];
+    }
+    if (init.hasOwnProperty('forceShow')) {
+      this.forceShow = init['forceShow'];
     }
     if (init.hasOwnProperty('position')) {
       if (init['position'] === 'relative') {
