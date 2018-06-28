@@ -77,6 +77,9 @@ interface ICommentManager {
    * @param c - IComment
    */
   finish(c:IComment):void;
+
+  showTips(t:IHoverTips):void;
+  hideTips():void;
 }
 
 interface ICommentFactory {
@@ -93,6 +96,12 @@ interface IMotion {
   dur:number;
   ttl:number;
   easing:Function;
+}
+
+interface IHoverTips {
+  tips:string;
+  left:number;
+  top:number;
 }
 
 interface IComment {

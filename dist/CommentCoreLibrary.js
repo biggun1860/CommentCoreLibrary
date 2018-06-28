@@ -370,6 +370,9 @@ var CoreComment = (function () {
         this._shadow = true;
         this._font = '';
         this._transform = null;
+        this._hovering = false;
+        this._hover = false;
+        this._hoverTips = '';
         if (!parent) {
             throw new Error('Comment not bound to comment manager.');
         }
@@ -464,8 +467,15 @@ var CoreComment = (function () {
                 }
             }
         }
+        if (init.hasOwnProperty('hover')) {
+            this._hover = init['hover'];
+        }
+        if (init.hasOwnProperty('hoverTips')) {
+            this._hoverTips = init['hoverTips'];
+        }
     }
     CoreComment.prototype.init = function (recycle) {
+        var _this = this;
         if (recycle === void 0) { recycle = null; }
         if (this._render) {
             this.dom = this._render();
@@ -507,6 +517,26 @@ var CoreComment = (function () {
         }
         if (this.motion.length > 0) {
             this.animate();
+        }
+        if (this._hover) {
+            this.dom.style.pointerEvents = 'auto';
+            this.dom.style.cursor = 'pointer';
+            this.dom.style.zIndex = '1';
+            this.dom.onmouseenter = function () {
+                _this._hovering = true;
+                _this.stop();
+                if (_this._hoverTips) {
+                    _this.parent.showTips({
+                        tips: _this._hoverTips,
+                        left: _this.dom.offsetLeft,
+                        top: _this.dom.offsetTop + _this.dom.offsetHeight,
+                    });
+                }
+            };
+            this.dom.onmouseleave = function () {
+                _this._hovering = false;
+                _this.parent.hideTips();
+            };
         }
     };
     Object.defineProperty(CoreComment.prototype, "x", {
@@ -730,6 +760,9 @@ var CoreComment = (function () {
         configurable: true
     });
     CoreComment.prototype.time = function (time) {
+        if (this._hovering) {
+            return;
+        }
         this.ttl -= time;
         if (this.ttl < 0) {
             this.ttl = 0;
@@ -1201,6 +1234,10 @@ window.CommentManager = (function() {
         this.runline = [];
         this.position = 0;
 
+        this.domTips = document.createElement('div');
+        this.domTips.className = 'cmt-tips';
+        this.stage.appendChild(this.domTips);
+
         this.factory = null;
         this.filter = null;
         this.csa = {
@@ -1433,6 +1470,17 @@ window.CommentManager = (function() {
             var cmt = cmObj.runline[i];
             cmt.time(timePassed);
         }
+    };
+
+    CommentManager.prototype.showTips = function(tipsObj) {
+      this.domTips.innerHTML = tipsObj.tips;
+      this.domTips.style.left = tipsObj.left + 'px';
+      this.domTips.style.top = tipsObj.top + 'px';
+      this.domTips.style.display = 'block';
+    };
+
+    CommentManager.prototype.hideTips = function() {
+        this.domTips.style.display = 'none';
     };
 
     return CommentManager;

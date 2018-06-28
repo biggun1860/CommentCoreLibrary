@@ -57,6 +57,9 @@ class CoreComment implements IComment {
   private _font:string = '';
   private _transform:CommentUtils.Matrix3D = null;
   private _render:Function;
+  private _hovering:boolean = false; // 是否正在hover状态(_hover:true时有效)
+  private _hover:boolean = false;
+  private _hoverTips:string = '';
 
   public parent:ICommentManager;
   public dom:HTMLDivElement;
@@ -154,6 +157,12 @@ class CoreComment implements IComment {
         }
       }
     }
+    if (init.hasOwnProperty('hover')) {
+      this._hover = init['hover'];
+    }
+    if (init.hasOwnProperty('hoverTips')) {
+      this._hoverTips = init['hoverTips'];
+    }
   }
 
   /**
@@ -200,6 +209,26 @@ class CoreComment implements IComment {
     if (this.motion.length > 0) {
       // Force a position update before doing anything
       this.animate();
+    }
+    if(this._hover) {
+      this.dom.style.pointerEvents = 'auto';
+      this.dom.style.cursor = 'pointer';
+      this.dom.style.zIndex = '1';
+      this.dom.onmouseenter = ()=>{
+        this._hovering = true;
+        this.stop();
+        if(this._hoverTips) {
+          this.parent.showTips({
+            tips:this._hoverTips,
+            left:this.dom.offsetLeft,
+            top:this.dom.offsetTop + this.dom.offsetHeight,
+          });
+        }
+      };
+      this.dom.onmouseleave = () => {
+        this._hovering = false;
+        this.parent.hideTips();
+      };
     }
   }
 
@@ -392,6 +421,9 @@ class CoreComment implements IComment {
    * @param time - elapsed time in ms
    */
   public time(time:number):void {
+    if(this._hovering) {
+      return;
+    }
     this.ttl -= time;
     if (this.ttl < 0) {
       this.ttl = 0;

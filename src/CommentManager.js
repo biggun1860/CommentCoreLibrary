@@ -53,6 +53,10 @@ window.CommentManager = (function() {
         this.runline = [];
         this.position = 0;
 
+        this.domTips = document.createElement('div');
+        this.domTips.className = 'cmt-tips';
+        this.stage.appendChild(this.domTips);
+
         this.factory = null;
         this.filter = null;
         this.csa = {
@@ -285,6 +289,17 @@ window.CommentManager = (function() {
             var cmt = cmObj.runline[i];
             cmt.time(timePassed);
         }
+    };
+
+    CommentManager.prototype.showTips = function(tipsObj) {
+      this.domTips.innerHTML = tipsObj.tips;
+      this.domTips.style.left = tipsObj.left + 'px';
+      this.domTips.style.top = tipsObj.top + 'px';
+      this.domTips.style.display = 'block';
+    };
+
+    CommentManager.prototype.hideTips = function() {
+        this.domTips.style.display = 'none';
     };
 
     return CommentManager;
